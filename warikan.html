@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>みんなの割り勘</title>
+    <link rel="stylesheet" href="warikan.css" />
+  </head>
+  <body>
+    <div id="notification"></div>
+
+    <div class="container" id="setupContainer">
+      <div class="header">
+        <h1>メンバー設定</h1>
+        <p>まずは、一緒に割り勘するメンバーを教えてください</p>
+      </div>
+      <div id="step1">
+        <label for="numPeople">参加人数：</label>
+        <select id="numPeople">
+          <option value="1">1人</option>
+          <option value="2">2人</option>
+          <option value="3" selected>3人</option>
+          <option value="4">4人</option>
+          <option value="5">5人</option>
+        </select>
+        <button id="createNameInputs">名前の入力欄を作る</button>
+      </div>
+      <div id="step2" class="hidden">
+        <h2>メンバーの名前は？</h2>
+        <form id="nameForm"></form>
+        <div class="button-container">
+          <button id="goToApp">割り勘をはじめる</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container hidden" id="appContainer">
+      <div class="header">
+        <h1>スマート割り勘</h1>
+      </div>
+
+      <div class="top-cards-container">
+        <div class="card" id="member-card">
+          <h2>メンバー</h2>
+          <div
+            id="participant-list-container"
+            class="participant-list-container"
+          ></div>
+          <div class="input-group">
+            <input
+              type="text"
+              id="newParticipant"
+              placeholder="途中参加のメンバー名"
+            />
+            <button onclick="addParticipant()">追加</button>
+          </div>
+        </div>
+
+        <div class="card" id="item-add-card">
+          <h2>買ったもの</h2>
+          <div class="input-group vertical">
+            <input
+              type="text"
+              id="productName"
+              placeholder="品目（例：ピザ）"
+            />
+            <input type="number" id="productPrice" placeholder="単価（円）" />
+            <input
+              type="number"
+              id="productQuantity"
+              placeholder="数量（例：3）"
+              min="1"
+              value="1"
+            />
+            <button onclick="addProduct()">リストに追加</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>支払いリスト</h2>
+        <div class="table-container">
+          <table id="productTable">
+            <thead>
+              <tr id="tableHeader">
+                <th style="display: none">ID</th>
+                <th>品目</th>
+                <th>金額</th>
+                <th>1人分</th>
+                <th>全員</th>
+                <th>削除</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+          <p id="empty-table-message" class="hidden">
+            まだ何もありません。上のフォームから追加してください。
+          </p>
+        </div>
+      </div>
+
+      <div class="button-container">
+        <button onclick="finalizeBill()" class="primary-action">
+          精算する
+        </button>
+      </div>
+    </div>
+
+    <div class="container hidden" id="finalResultPage">
+      <div class="header">
+        <h1>精算結果</h1>
+        <p>おつかれさまでした！</p>
+      </div>
+      <div id="final-result-text" class="card"></div>
+      <div class="button-container">
+        <button id="backToApp" class="secondary-action">
+          入力に戻って修正
+        </button>
+        <button id="resetApp">もう一度、最初から</button>
+      </div>
+    </div>
+
+    <script src="warikan.js"></script>
+  </body>
+</html>
