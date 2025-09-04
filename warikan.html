@@ -23,7 +23,6 @@
           <option value="4">4人</option>
           <option value="5">5人</option>
         </select>
-        <button id="createNameInputs">名前の入力欄を作る</button>
       </div>
       <div id="step2" class="hidden">
         <h2>メンバーの名前は？</h2>
@@ -87,7 +86,7 @@
                 <th>品目</th>
                 <th>金額</th>
                 <th>1人分</th>
-                <th>全員</th>
+                <th>選択</th>
                 <th>削除</th>
               </tr>
             </thead>
@@ -120,6 +119,16 @@
       </div>
     </div>
 
+    <div id="participantModal" class="modal hidden">
+      <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h3>支払いメンバーの選択</h3>
+        <div id="modalParticipantList"></div>
+        <button id="saveModal" class="primary-action">決定</button>
+      </div>
+    </div>
+
     <script src="warikan.js"></script>
   </body>
 </html>
+
