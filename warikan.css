@@ -184,7 +184,7 @@ button.primary-action {
   line-height: 1;
   margin-left: 8px;
   cursor: pointer;
-  padding: 0 2px;
+  padding: 6px 8px;
 }
 .participant-tag button:hover {
   color: #004d40;
@@ -296,6 +296,8 @@ tbody tr:hover {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
   transition: top 0.4s ease-in-out;
   background-color: var(--primary-color);
+  max-width: 90%;
+  word-break: break-word;
 }
 #notification.show {
   top: 20px;
@@ -304,14 +306,17 @@ tbody tr:hover {
   background-color: var(--danger-color);
 }
 
-/* モバイル対応（スマホ画面） */
 @media (max-width: 600px) {
+  body {
+    font-size: 16px;
+  }
+
   .container {
-    padding: 20px;
+    padding: 20px 15px;
   }
 
   .top-cards-container {
-    grid-template-columns: 1fr; /* 1列にする */
+    grid-template-columns: 1fr;
     gap: 15px;
   }
 
@@ -320,6 +325,8 @@ tbody tr:hover {
   select {
     font-size: 15px;
     padding: 10px 12px;
+    width: 100%;
+    box-sizing: border-box;
   }
 
   .input-group {
@@ -355,7 +362,12 @@ tbody tr:hover {
   }
 
   .primary-action {
-    width: 100%;
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    width: calc(100% - 40px);
     padding: 14px;
     font-size: 16px;
   }
@@ -365,14 +377,10 @@ tbody tr:hover {
     flex-direction: column;
     gap: 12px;
   }
-}
-@media (max-width: 600px) {
-  .primary-action {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    z-index: 999;
-    width: calc(100% - 40px);
+
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
   }
 }
+
