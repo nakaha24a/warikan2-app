@@ -193,6 +193,7 @@ button.primary-action {
 .table-container {
   max-height: 450px;
   overflow-y: auto;
+  overflow-x: auto;
   border: 1px solid var(--border-color);
   border-radius: var(--border-radius);
 }
@@ -301,4 +302,77 @@ tbody tr:hover {
 }
 #notification.error {
   background-color: var(--danger-color);
+}
+
+/* モバイル対応（スマホ画面） */
+@media (max-width: 600px) {
+  .container {
+    padding: 20px;
+  }
+
+  .top-cards-container {
+    grid-template-columns: 1fr; /* 1列にする */
+    gap: 15px;
+  }
+
+  button,
+  input,
+  select {
+    font-size: 15px;
+    padding: 10px 12px;
+  }
+
+  .input-group {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+  }
+
+  .participant-tag {
+    font-size: 14px;
+    padding: 6px 10px;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  th,
+  td {
+    padding: 10px 5px;
+  }
+
+  .final-payment {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .summary-box p {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 3px;
+  }
+
+  .primary-action {
+    width: 100%;
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+}
+@media (max-width: 600px) {
+  .primary-action {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    width: calc(100% - 40px);
+  }
 }
