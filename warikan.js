@@ -8,9 +8,19 @@ const numPeopleSelect = document.getElementById("numPeople");
 const nameForm = document.getElementById("nameForm");
 const notification = document.getElementById("notification");
 const emptyTableMessage = document.getElementById("empty-table-message");
+const backToAppButton = document.getElementById("backToApp");
+const resetAppButton = document.getElementById("resetApp");
+const goToAppButton = document.getElementById("goToApp");
+
+// ✅ モーダル用の要素を追加
+const participantModal = document.getElementById("participantModal");
+const closeButton = document.querySelector(".close-button");
+const modalParticipantList = document.getElementById("modalParticipantList");
+const saveModalButton = document.getElementById("saveModal");
 
 let participants = [];
 let productCounter = 1;
+let currentEditingRow = null;
 
 function showNotification(message, type = "success") {
   notification.textContent = message;
@@ -25,19 +35,23 @@ function showNotification(message, type = "success") {
   }, 3000);
 }
 
-document.getElementById("createNameInputs").onclick = () => {
+// 関数として切り出す（再利用できるように）
+function createNameInputs() {
   const num = parseInt(numPeopleSelect.value);
   nameForm.innerHTML = "";
   for (let i = 0; i < num; i++) {
     const input = document.createElement("input");
     input.type = "text";
     input.placeholder = `メンバー${i + 1}`;
+    input.name = `member${i + 1}`; // optional: 識別用
     nameForm.appendChild(input);
   }
   step2.classList.remove("hidden");
-};
+}
 
-document.getElementById("goToApp").onclick = () => {
+numPeopleSelect.addEventListener("change", createNameInputs);
+
+goToAppButton.onclick = () => {
   const inputs = nameForm.querySelectorAll("input");
   let newParticipants = [];
   inputs.forEach((input, index) => {
@@ -58,7 +72,7 @@ document.getElementById("goToApp").onclick = () => {
   appContainer.classList.remove("hidden");
 };
 
-document.getElementById("resetApp").onclick = () => {
+resetAppButton.onclick = () => {
   showNotification("アプリをリセットしました。", "success");
   setTimeout(() => {
     location.reload();
@@ -66,27 +80,15 @@ document.getElementById("resetApp").onclick = () => {
 };
 
 function initializeApp() {
-  updateParticipantHeaders();
+  // ✅ メンバー名ヘッダーの更新は不要になった
   updateParticipantList();
   document.querySelector("#productTable tbody").innerHTML = "";
   updateEmptyTableMessage();
   productCounter = 1;
 }
 
-function updateParticipantHeaders() {
-  const headerRow = document.getElementById("tableHeader");
-  while (headerRow.children.length > 6) {
-    headerRow.removeChild(headerRow.children[4]);
-  }
-  participants
-    .slice()
-    .reverse()
-    .forEach((name) => {
-      const th = document.createElement("th");
-      th.textContent = name;
-      headerRow.insertBefore(th, headerRow.children[4]);
-    });
-}
+// ✅ updateParticipantHeaders関数を削除 (中身をすべて削除)
+function updateParticipantHeaders() {}
 
 function updateParticipantList() {
   const listContainer = document.getElementById("participant-list-container");
@@ -124,21 +126,24 @@ function addParticipant() {
     return;
   }
   participants.push(newName);
-  updateParticipantHeaders();
   updateParticipantList();
 
+  // ✅ テーブルの行にチェックボックスを追加するロジックを削除
+  // document.querySelectorAll("#productTable tbody tr").forEach((row) => { ... });
+
+  // 既存の品目に新しいメンバーを追加（data-participantsを更新）
   document.querySelectorAll("#productTable tbody tr").forEach((row) => {
-    const cell = row.insertCell(4);
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.addEventListener("change", () => {
-      const price = parseFloat(
-        row.cells[2].textContent.replace(/,/g, "").replace("円", "")
-      );
-      calculateSplitPrice(row, price);
-    });
-    cell.appendChild(checkbox);
+    const checkedStatus = JSON.parse(
+      row.getAttribute("data-participants") || "[]"
+    );
+    checkedStatus.push(false); // 新しいメンバーはデフォルトで選択されていない
+    row.setAttribute("data-participants", JSON.stringify(checkedStatus));
+    const price = parseFloat(
+      row.cells[2].textContent.replace(/,/g, "").replace("円", "")
+    );
+    calculateSplitPrice(row, price);
   });
+
   newNameInput.value = "";
   showNotification(`${newName}さんを追加しました。`);
 }
@@ -150,16 +155,24 @@ function removeParticipantByName(nameToRemove) {
   if (index === -1) return;
 
   participants.splice(index, 1);
-  updateParticipantHeaders();
   updateParticipantList();
 
+  // ✅ テーブルの行を削除するロジックを削除
+  // document.querySelectorAll("#productTable tbody tr").forEach((row) => { ... });
+
+  // 既存の品目から削除されたメンバーを更新（data-participantsを更新）
   document.querySelectorAll("#productTable tbody tr").forEach((row) => {
-    row.deleteCell(index + 4);
+    const checkedStatus = JSON.parse(
+      row.getAttribute("data-participants") || "[]"
+    );
+    checkedStatus.splice(index, 1);
+    row.setAttribute("data-participants", JSON.stringify(checkedStatus));
     const price = parseFloat(
       row.cells[2].textContent.replace(/,/g, "").replace("円", "")
     );
     calculateSplitPrice(row, price);
   });
+
   showNotification(`${nameToRemove}さんを削除しました。`);
 }
 
@@ -183,27 +196,19 @@ function addProduct(name, price, checkedStatus = null, fromUserInput = true) {
 
   row.insertCell(0).style.display = "none";
   row.cells[0].textContent = String(productCounter).padStart(3, "0");
-  row.insertCell(1).textContent = `${productName}（×${quantity}）`; // 表示に数量を加える
+  row.insertCell(1).textContent = `${productName}（×${quantity}）`;
   row.insertCell(2).textContent = `${productPrice.toLocaleString()}円`;
   row.insertCell(3).textContent = `0円`;
 
-  participants.forEach((p, i) => {
-    const cell = row.insertCell(4);
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    if (checkedStatus) checkbox.checked = checkedStatus[i];
-    checkbox.addEventListener("change", () => {
-      calculateSplitPrice(row, productPrice);
-    });
-    cell.appendChild(checkbox);
-  });
+  // ✅ 参加者選択ボタンを追加
+  const selectCell = row.insertCell(row.cells.length);
+  const selectBtn = document.createElement("button");
+  selectBtn.textContent = "選択";
+  selectBtn.className = "primary-action small-btn";
+  selectBtn.onclick = () => openModal(row);
+  selectCell.appendChild(selectBtn);
 
-  const selectAllCell = row.insertCell(row.cells.length);
-  const selectAllBtn = document.createElement("button");
-  selectAllBtn.textContent = "全員";
-  selectAllBtn.onclick = () => toggleSelectAll(row, selectAllBtn);
-  selectAllCell.appendChild(selectAllBtn);
-
+  // ✅ 削除ボタンをそのまま追加
   const deleteCell = row.insertCell(row.cells.length);
   const delBtn = document.createElement("button");
   delBtn.textContent = "削除";
@@ -214,6 +219,12 @@ function addProduct(name, price, checkedStatus = null, fromUserInput = true) {
   };
   deleteCell.appendChild(delBtn);
 
+  if (checkedStatus) {
+    row.setAttribute("data-participants", JSON.stringify(checkedStatus));
+  } else {
+    const defaultStatus = Array(participants.length).fill(true);
+    row.setAttribute("data-participants", JSON.stringify(defaultStatus));
+  }
   calculateSplitPrice(row, productPrice);
   productCounter++;
 
@@ -226,51 +237,38 @@ function addProduct(name, price, checkedStatus = null, fromUserInput = true) {
   updateEmptyTableMessage();
 }
 
+// ✅ calculateSplitPrice関数を修正
 function calculateSplitPrice(row, productPrice) {
-  const checkboxes = row.querySelectorAll('input[type="checkbox"]');
-  const checkedCount = Array.from(checkboxes).filter((c) => c.checked).length;
+  const checkedStatus = JSON.parse(
+    row.getAttribute("data-participants") || "[]"
+  );
+  const checkedCount = checkedStatus.filter((c) => c).length;
   const split = checkedCount > 0 ? productPrice / checkedCount : 0;
   row.cells[3].textContent = `${Math.round(split).toLocaleString()}円`;
-
-  const isAllSelected = Array.from(checkboxes).every((c) => c.checked);
-  const selectAllBtn = row.querySelector("button");
-  if (selectAllBtn) {
-    selectAllBtn.textContent = isAllSelected ? "解除" : "全員";
-  }
 }
 
-function toggleSelectAll(row, btn) {
-  const checkboxes = row.querySelectorAll('input[type="checkbox"]');
-  const isAllSelected = Array.from(checkboxes).every((c) => c.checked);
-  checkboxes.forEach((c) => (c.checked = !isAllSelected));
+// ✅ toggleSelectAll関数を削除 (モーダル内での操作に変わるため)
+function toggleSelectAll() {}
 
-  // ✅ ここで productPrice を必ず再取得するように修正
-  const priceCell = row.cells[2].textContent;
-  const productPrice = parseFloat(
-    priceCell.replace("円", "").replace(/,/g, "")
-  );
-
-  calculateSplitPrice(row, productPrice);
-}
-
+// ✅ calculateTotals関数を修正
 function calculateTotals() {
   const totals = {};
   participants.forEach((p) => (totals[p] = 0));
 
   document.querySelectorAll("#productTable tbody tr").forEach((row) => {
-    const checkboxes = Array.from(
-      row.querySelectorAll('input[type="checkbox"]')
+    const checkedStatus = JSON.parse(
+      row.getAttribute("data-participants") || "[]"
     );
     const price = parseFloat(
       row.cells[2].textContent.replace(/,/g, "").replace("円", "")
     );
-    const checkedCount = checkboxes.filter((c) => c.checked).length;
+    const checkedCount = checkedStatus.filter((c) => c).length;
 
     if (checkedCount === 0) return;
 
     const splitAmount = price / checkedCount;
-    checkboxes.forEach((cb, i) => {
-      if (cb.checked) {
+    checkedStatus.forEach((isChecked, i) => {
+      if (isChecked) {
         totals[participants[i]] += splitAmount;
       }
     });
@@ -295,8 +293,10 @@ function finalizeBill() {
 
   let hasUnassigned = false;
   rows.forEach((row) => {
-    const checkboxes = row.querySelectorAll('input[type="checkbox"]');
-    const checkedCount = Array.from(checkboxes).filter((c) => c.checked).length;
+    const checkedStatus = JSON.parse(
+      row.getAttribute("data-participants") || "[]"
+    );
+    const checkedCount = checkedStatus.filter((c) => c).length;
     row.classList.remove("warning-highlight");
     if (checkedCount === 0) {
       row.classList.add("warning-highlight");
@@ -363,7 +363,61 @@ function finalizeBill() {
   finalResultPage.classList.remove("hidden");
 }
 
-document.getElementById("backToApp").addEventListener("click", () => {
+backToAppButton.addEventListener("click", () => {
   finalResultPage.classList.add("hidden");
   appContainer.classList.remove("hidden");
 });
+// ページ読み込み時に入力欄を自動作成（デフォルト3人に対応）
+window.addEventListener("DOMContentLoaded", () => {
+  createNameInputs();
+});
+
+// ✅ モーダルを開く関数を新規追加
+function openModal(row) {
+  currentEditingRow = row;
+  modalParticipantList.innerHTML = "";
+
+  const checkedStatus = JSON.parse(
+    row.getAttribute("data-participants") || "[]"
+  );
+
+  participants.forEach((name, index) => {
+    const label = document.createElement("label");
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = checkedStatus[index] || false;
+    checkbox.setAttribute("data-participant-index", index);
+
+    label.appendChild(checkbox);
+    label.append(name);
+    modalParticipantList.appendChild(label);
+  });
+
+  participantModal.classList.remove("hidden");
+}
+
+// ✅ モーダルを閉じる関数を新規追加
+closeButton.onclick = () => {
+  participantModal.classList.add("hidden");
+};
+
+// ✅ モーダルで「決定」ボタンがクリックされた時の処理を新規追加
+saveModalButton.onclick = () => {
+  if (currentEditingRow) {
+    const checkboxes = modalParticipantList.querySelectorAll(
+      'input[type="checkbox"]'
+    );
+    const checkedParticipants = Array.from(checkboxes).map((cb) => cb.checked);
+
+    currentEditingRow.setAttribute(
+      "data-participants",
+      JSON.stringify(checkedParticipants)
+    );
+
+    const price = parseFloat(
+      currentEditingRow.cells[2].textContent.replace(/,/g, "").replace("円", "")
+    );
+    calculateSplitPrice(currentEditingRow, price, checkedParticipants);
+  }
+  participantModal.classList.add("hidden");
+};
