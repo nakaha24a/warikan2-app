@@ -200,11 +200,10 @@ function addProduct(name, price, checkedStatus = null, fromUserInput = true) {
   row.insertCell(2).textContent = `${productPrice.toLocaleString()}円`;
   row.insertCell(3).textContent = `0円`;
 
-  // ✅ 参加者選択ボタンを追加
   const selectCell = row.insertCell(row.cells.length);
   const selectBtn = document.createElement("button");
   selectBtn.textContent = "選択";
-  selectBtn.className = "primary-action small-btn";
+  selectBtn.className = "small-btn"; // primary-actionクラスを削除
   selectBtn.onclick = () => openModal(row);
   selectCell.appendChild(selectBtn);
 
