@@ -140,6 +140,17 @@ button.primary-action {
   font-weight: 700;
 }
 
+/* small-btnのスタイルを新規追加 */
+.small-btn {
+  padding: 8px 12px;
+  font-size: 14px;
+  background-color: var(--primary-color);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
 #nameForm {
   display: flex;
   flex-wrap: wrap;
@@ -334,6 +345,15 @@ tbody tr:hover {
     display: flex;
     flex-direction: column;
     gap: 12px;
+  }
+
+  button.primary-action {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 999;
+    width: calc(100% - 40px);
   }
 
   .top-cards-container {
